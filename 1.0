@@ -1,0 +1,54 @@
+import random
+import spacy
+import wikipedia
+
+class EnhancedChatbot:
+    def init(self):
+        self.nlp = spacy.load("encore_web_sm")
+        self.responses = {
+            "hi": ["Hello! How can I assist you today?", "Hi there! What can I do for you?", "Hey! What's on your mind?"],
+            "how_are_you": ["I'm just a bunch of code, but I'm doing great! Thanks for asking.", "I'm here and ready to help! How about you?", "I'm functioning perfectly fine. What about you?"],
+            "bye": ["Goodbye! Don't hesitate to return if you have more questions.", "See you later! Have a great day!", "Bye! Take care!"]
+        }
+
+    def respond(self, user_input):
+        doc = self.nlp(user_input.lower())
+        for token in doc:
+            if token.lemma == "hi":
+                return random.choice(self.responses["hi"])
+            elif token.lemma == "goodbye":
+                return random.choice(self.responses["bye"])
+            elif token.lemma == "how" and token.nbor().lemma == "be":
+                return random.choice(self.responses["how_are_you"])
+            elif token.lemma == "tell" and token.nbor().lemma == "me" and doc[doc.index(token) + 1].lemma == "about":
+                topic =
+user_input.split("about", 1)[-1].strip()
+                return self.get_wikipedia_summary(topic)
+        return "I'm sorry, I didn't quite catch that. Could you please rephrase?"
+
+    def get_wikipedia_summary(self, topic):
+        try:
+            summary = wikipedia.summary(topic)
+            return summary[:300] + "..." if len(summary) > 300 else summary
+        except wikipedia.exceptions.PageError:
+            return "Sorry, I couldn't find any information on that topic."
+        except wikipedia.exceptions.DisambiguationError as e:
+            return f"Sorry, I found multiple articles related to that topic. Can you be more specific? Here are some suggestions: {', '.join(e.options[:3])}"
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return "Sorry, I encountered an error while processing your request. Please try again later."
+
+def chat():
+    print("Hello! I'm an enhanced chatbot with access to Wikipedia.")
+print("Feel free to ask me anything, or just say hi!")
+    chatbot = EnhancedChatbot()
+    while True:
+        userinput = input("You: ").strip()
+        if userinput.lower() == "quit":
+            print("Goodbye! Remember, I'm always here if you need me!")
+            break
+        response = chatbot.respond(userinput)
+        print("Chatbot:", response)
+
+if _name == "__main":
+    chat()
